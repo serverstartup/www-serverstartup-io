@@ -27,7 +27,10 @@ env:
 
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # The branches filter above compares names only, and a pull request from a
+    # fork can name its branch main: only a push to this repository gets past
+    # here, because this job runs that commit's code with this repo's secrets (#715).
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
