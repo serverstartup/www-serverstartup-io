@@ -47,7 +47,10 @@ describe("workflow_run jobs that run the triggering commit", () => {
 		for (const [name, job] of jobs(yaml)) {
 			if (!runsTriggeringCommit(job)) continue;
 			it(`${file} → ${name} runs only for a push to this repository`, () => {
-				expect(jobIf(job)).toContain(GUARD);
+				// Joined by AND inside the workflow_run branch: `|| GUARD` would read the same
+				// as a substring and protect nothing.
+				expect(jobIf(job)).toContain(`&& ${GUARD})`);
+				expect(jobIf(job).split("||").length).toBeLessThanOrEqual(2);
 			});
 		}
 	}
