@@ -208,6 +208,7 @@
  */
 import puppeteer from "puppeteer";
 import { cdpDiagnosis, stackDiagnosis } from "./lib/stack-probe.mjs";
+import { HOST_NEUTRAL } from "./lib/host-neutral.mjs";
 
 const BASE = (process.argv[2] || "http://localhost:8787").replace(/\/$/, "");
 
@@ -1214,7 +1215,7 @@ const judgeCard = (m, where) => {
 
 const browser = await puppeteer.launch({
 	headless: "new",
-	args: ["--no-sandbox"],
+	args: ["--no-sandbox", ...HOST_NEUTRAL],
 	protocolTimeout: 300_000,
 });
 

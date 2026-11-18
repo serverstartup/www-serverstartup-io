@@ -44,6 +44,7 @@
 import puppeteer from "puppeteer";
 import { seedRoutes } from "./lib/seed-routes.mjs";
 import { cdpDiagnosis, stackDiagnosis } from "./lib/stack-probe.mjs";
+import { HOST_NEUTRAL } from "./lib/host-neutral.mjs";
 
 const BASE = (process.argv[2] || "http://localhost:8787").replace(/\/$/, "");
 
@@ -296,7 +297,7 @@ async function positiveControl(browser) {
 }
 
 /* ------------------------------------------------------------------------- run */
-const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"], protocolTimeout: 300_000 });
+const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox", ...HOST_NEUTRAL], protocolTimeout: 300_000 });
 await positiveControl(browser);
 
 const routes = seedRoutes();

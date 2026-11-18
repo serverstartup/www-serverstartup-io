@@ -20,6 +20,7 @@ import { createRequire } from "node:module";
 import { availableParallelism } from "node:os";
 import { entryPath, readSeed, seedRoutes } from "./lib/seed-routes.mjs";
 import { cdpDiagnosis, stackDiagnosis } from "./lib/stack-probe.mjs";
+import { HOST_NEUTRAL } from "./lib/host-neutral.mjs";
 
 const BASE = (process.argv[2] || "http://localhost:8787").replace(/\/$/, "");
 
@@ -291,6 +292,7 @@ const LAUNCH = {
 	args: [
 		"--no-sandbox",
 		"--disable-dev-shm-usage",
+		...HOST_NEUTRAL,
 	],
 	// Puppeteer 23.11.1 defaults this to 180 000 ms, and a loaded machine can
 	// spend all three minutes of it not answering one CDP call (#425). Raised,
