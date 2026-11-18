@@ -444,14 +444,36 @@ const CUBE = {
 			...hero.getAnimations({ subtree: true }),
 			...(document.querySelector(".site-header")?.getAnimations() ?? []),
 		];
+		/* Under reduced motion the band has no clock to seek: `animation: none` leaves nothing running, and
+		   a seek moved nothing — seven buttons that did nothing, and the stops are the only way to the six
+		   photographs (#718). There a stop pins its frame through the manual mode the stylesheet spells
+		   out, and parks the frame's colour where the header's edge reads it. Decided per click, not at
+		   load: the setting can change while the page is open. */
+		const still = () => !hero.querySelector(".s-hero__seal")?.getAnimations().length;
 		const now = () => Number(hero.querySelector(".s-hero__seal")?.getAnimations()[0]?.currentTime ?? 0);
-		const current = () => Math.floor(((((now() + LEAD) % cycle) + cycle) % cycle) / step) % n;
+		const current = () =>
+			hero.classList.contains("is-manual")
+				? Number(hero.dataset.slide ?? 0)
+				: Math.floor(((((now() + LEAD) % cycle) + cycle) % cycle) / step) % n;
+		const pin = (k: number) => {
+			hero.classList.add("is-manual");
+			hero.dataset.slide = String(k);
+			document.documentElement.style.setProperty("--hero-now", stops[k].style.getPropertyValue("--cc"));
+		};
 		const show = (i: number) => {
 			const k = ((i % n) + n) % n;
+			if (hero.classList.contains("is-manual") || still()) return pin(k);
 			const round = Math.floor((now() + LEAD) / cycle) + 1;
 			const at = round * cycle + k * step - LEAD + IN;
 			for (const a of clocked()) a.currentTime = at;
 		};
+		// motion allowed again: hand the band back to its clock
+		matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", (e) => {
+			if (e.matches) return;
+			hero.classList.remove("is-manual");
+			delete hero.dataset.slide;
+			document.documentElement.style.removeProperty("--hero-now");
+		});
 		stops.forEach((stop, i) => {
 			const name = stop.querySelector(".s-hero__stop-name")?.textContent?.trim() ?? "";
 			stop.setAttribute("role", "button");

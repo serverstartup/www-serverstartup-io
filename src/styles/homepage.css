@@ -241,8 +241,17 @@
 	align-self: start;
 }
 
+/* The list shares the deck's cell with the «nosotros» index and comes after it, so its own box — not its
+   hidden cards — sat over the index and took the pointer: with motion the running animation lifted the
+   index above it, under reduced motion nothing did, and four rows of six (all six on a phone) answered
+   neither hover nor click (#718). The list never takes the pointer; a card does while it is shown. */
 .s-hero__index {
 	display: grid;
+	pointer-events: none;
+}
+
+.s-hero__item {
+	pointer-events: auto;
 }
 
 .s-hero__verticals,
