@@ -669,11 +669,9 @@
 	/* Heavy under the copy, down to its last line (`--copy-end`, measured by
 	   the script; before it arrives, the fallback covers a 393 × 659 phone's
 	   copy), then light where the photograph shows, and darker again at the
-	   foot under the rail. 0.76 is the lightest that holds every frame: at
-	   0.66 the Guggenheim's green tail fell to 2.68:1, under the 3:1 its size
-	   is owed. The card carries its own pane. Measured on four phones and all
-	   seven frames (#720): the kicker ≥ 7.8:1, the h1 and its tail ≥ 3.7:1,
-	   the card ≥ 10:1 against the brightest pixel under them. */
+	   foot under the rail. The card carries its own pane. Why these weights,
+	   and what they measured: docs/architecture.md, «Phones, the photograph
+	   behind the copy». */
 	.s-hero--home .s-hero__scrim {
 		z-index: 1;
 		background-image: linear-gradient(180deg,
@@ -684,13 +682,15 @@
 			var(--hero-shade-foot) 100%);
 	}
 	/* «nosotros»'s cube, the frame's picture where the others have a
-	   photograph, under the shade like them: centred a little under the copy's
-	   end and leaving by the right edge, as on a desktop it leaves by the left.
-	   Above the shade, its lit edges ran behind the kicker at 1.1:1. */
+	   photograph, in the room between the copy and the card (`--cube-room`,
+	   measured by the script, 0 under 120 px) and never on a letter: sized to
+	   the room, leaving by the right edge as on a desktop it leaves by the
+	   left. A short phone has no such room and draws no cube; before #720 its
+	   cube was a screen down anyway. Under the shade like a photograph. */
 	.s-hero--home .s-hero__mark {
 		z-index: 0;
-		--cube-h: min(78vw, 46svh);
-		top: calc(var(--copy-end, 62svh) - var(--cube-h) * 0.45);
+		--cube-h: min(78vw, 46svh, max(0px, (var(--cube-room, 0px) - 2 * var(--space-3)) / 1.14));
+		top: calc(var(--copy-end, 62svh) + var(--space-3));
 		bottom: auto;
 		left: auto;
 		right: calc(var(--cube-h) * -0.3);
@@ -729,18 +729,19 @@
 		animation: none;
 	}
 	/* The tail stands on a photograph now, as on a desktop: the photo-lifted
-	   tints, on the clock and pinned. */
+	   tints (`--tq*`: a face's phone lift where it has one), on the clock and
+	   pinned. */
 	.s-hero--home .ss-title__tail {
-		color: var(--tp0, var(--color-brand-grey));
-		animation-name: s-hero-tail-photo;
+		color: var(--tq0, var(--color-brand-grey));
+		animation-name: s-hero-tail-phone;
 	}
-	.s-hero.is-manual[data-slide="0"] .ss-title__tail { color: var(--tp0, var(--color-brand-grey)); }
-	.s-hero.is-manual[data-slide="1"] .ss-title__tail { color: var(--tp1, var(--color-brand-grey)); }
-	.s-hero.is-manual[data-slide="2"] .ss-title__tail { color: var(--tp2, var(--color-brand-grey)); }
-	.s-hero.is-manual[data-slide="3"] .ss-title__tail { color: var(--tp3, var(--color-brand-grey)); }
-	.s-hero.is-manual[data-slide="4"] .ss-title__tail { color: var(--tp4, var(--color-brand-grey)); }
-	.s-hero.is-manual[data-slide="5"] .ss-title__tail { color: var(--tp5, var(--color-brand-grey)); }
-	.s-hero.is-manual[data-slide="6"] .ss-title__tail { color: var(--tp6, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="0"] .ss-title__tail { color: var(--tq0, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="1"] .ss-title__tail { color: var(--tq1, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="2"] .ss-title__tail { color: var(--tq2, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="3"] .ss-title__tail { color: var(--tq3, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="4"] .ss-title__tail { color: var(--tq4, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="5"] .ss-title__tail { color: var(--tq5, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="6"] .ss-title__tail { color: var(--tq6, var(--color-brand-grey)); }
 }
 
 /* Below 360 px the h1 keeps the pause's square clear, and its first line
@@ -914,6 +915,25 @@
 	85.7143% { color: var(--tp6, var(--color-brand-grey)); }
 	98.5714% { color: var(--tp6, var(--color-brand-grey)); }
 	100% { color: var(--tp0, var(--color-brand-grey)); }
+}
+
+/* the same on a phone's shade (#720) */
+@keyframes s-hero-tail-phone {
+	0% { color: var(--tq0, var(--color-brand-grey)); }
+	12.8571% { color: var(--tq0, var(--color-brand-grey)); }
+	14.2857% { color: var(--tq1, var(--color-brand-grey)); }
+	27.1429% { color: var(--tq1, var(--color-brand-grey)); }
+	28.5714% { color: var(--tq2, var(--color-brand-grey)); }
+	41.4286% { color: var(--tq2, var(--color-brand-grey)); }
+	42.8571% { color: var(--tq3, var(--color-brand-grey)); }
+	55.7143% { color: var(--tq3, var(--color-brand-grey)); }
+	57.1429% { color: var(--tq4, var(--color-brand-grey)); }
+	70% { color: var(--tq4, var(--color-brand-grey)); }
+	71.4286% { color: var(--tq5, var(--color-brand-grey)); }
+	84.2857% { color: var(--tq5, var(--color-brand-grey)); }
+	85.7143% { color: var(--tq6, var(--color-brand-grey)); }
+	98.5714% { color: var(--tq6, var(--color-brand-grey)); }
+	100% { color: var(--tq0, var(--color-brand-grey)); }
 }
 
 /* #315's rule, applied to the loudest motion on the site: someone who asked

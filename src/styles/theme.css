@@ -367,6 +367,11 @@
 	--color-tail-gf-photo: #8ABD97;
 	--color-tail-ec-photo: #98D6FF;
 	--color-tail-bd-photo: #97B8DE;
+	/* on a phone (#720) the tail stands on the photograph under a shade. Every
+	   photo tint holds 4.5:1 there but the greenfield one over the Guggenheim
+	   (3.7:1), so a phone takes this lift of it: OKLCH lightness +0.08 at its
+	   own hue, chroma kept. The desktop's tint is unchanged. */
+	--color-tail-gf-phone: #A3D7B0;
 
 	/* ── The menu panel (#417, re-inked #431) ────────────────────────────
 	   #417 put the panel on ink with the hero's own cube drawing behind it,

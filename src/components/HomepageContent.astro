@@ -101,12 +101,16 @@ const heroSlides = sortByVoyage(services).flatMap((svc: any) => {
 const frames = heroSlides.length + 1;
 
 // The tail's colour per frame, as custom properties the clock's keyframes
-// read: `--tm*` on the flat band (phones, tablets), `--tp*` on the
-// photograph (desktops). theme.css tokens, keyed by face in HERO_TAIL —
-// never a copy of the palette here.
+// read: `--tm*` on the flat band (tablets), `--tp*` on the photograph
+// (desktops), `--tq*` on the photograph under a phone's shade (#720: the
+// photo tint, or a face's own phone lift where it has one). theme.css
+// tokens, keyed by face in HERO_TAIL — never a copy of the palette here.
 const tailVars = [
-	"--tm0:var(--color-brand-grey);--tp0:var(--color-brand-grey)",
-	...heroSlides.map((s, i) => `--tm${i + 1}:${HERO_TAIL[s.face].band};--tp${i + 1}:${HERO_TAIL[s.face].photo}`),
+	"--tm0:var(--color-brand-grey);--tp0:var(--color-brand-grey);--tq0:var(--color-brand-grey)",
+	...heroSlides.map((s, i) => {
+		const t = HERO_TAIL[s.face];
+		return `--tm${i + 1}:${t.band};--tp${i + 1}:${t.photo};--tq${i + 1}:${t.phone ?? t.photo}`;
+	}),
 ].join(";");
 
 // «Cómo trabajamos» (#580, brief §3.4): seven items, a bold declarative
@@ -396,9 +400,17 @@ const CUBE = {
 	const card = hero?.querySelector<HTMLElement>(".s-hero__card");
 	const measure = () => {
 		if (!hero || !card) return;
-		// where the copy ends, for the phone's shade (#720): heavy down to the kicker's last line, light under it
+		// for a phone (#720): where the copy ends (the shade is heavy down to it) and the room between it and the
+		// card, the only place the «nosotros» cube can stand without reaching a letter. Under 120 px there is no
+		// cube worth drawing, so it gets none.
 		const kicker = hero.querySelector<HTMLElement>(".s-hero__kicker");
-		if (kicker) hero.style.setProperty("--copy-end", `${Math.round(kicker.getBoundingClientRect().bottom - hero.getBoundingClientRect().top)}px`);
+		if (kicker) {
+			const top = hero.getBoundingClientRect().top;
+			const copyEnd = Math.round(kicker.getBoundingClientRect().bottom - top);
+			const room = Math.round(card.getBoundingClientRect().top - top) - copyEnd;
+			hero.style.setProperty("--copy-end", `${copyEnd}px`);
+			hero.style.setProperty("--cube-room", `${room >= 120 ? room : 0}px`);
+		}
 		const index = card.querySelector<HTMLElement>(".s-hero__verticals");
 		const items = Array.from(card.querySelectorAll<HTMLElement>(".s-hero__item"));
 		if (!index || !items.length) return;

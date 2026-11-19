@@ -779,27 +779,64 @@ rotating edge (Base.astro), so the two cannot drift.
   declined (it cut the inner pages' breadcrumb from 173 to 88 px at 393 px).
 - **Phones, the photograph behind the copy (#720, founder 2026-11-19)**: #572's order left no
   photograph in a phone's first screen. Measured 2026-11-19 on production: the strip's first pixel
-  was at y = 684 on 393 × 659 and 833 on 320 × 568, and only 156 px of it showed on a Pixel 7,
+  was at y = 684 on 393 × 659 and at 833 on 320 × 568. Only 156 px of it showed on a Pixel 7,
   while every vertical shows its photograph from y ≈ 370. The founder: "en la home tengo que hacer
-  scroll". Three layouts were rendered into the live page: the photograph first (the kicker ended at
-  693 in the 659 fold, #572's problem back), the card over a strip under the copy (the card fell
-  under the fold), and the photograph filling the band with the copy on it, the desktop's
-  composition. He chose the third. The band is at least a screen tall and the photographs cover
-  it. #572's order stays, h1 → kicker → card → rail, so G23 holds unchanged. The shade is drawn in
-  `homepage.css` from three tokens: heavy (`--hero-shade-copy`, 0.76) down to the kicker's last line,
-  which the script measures into `--copy-end`; light (`--hero-shade-clear`) where the photograph
-  shows; darker at the foot (`--hero-shade-foot`). 0.76 is the lightest that held: at 0.66 the
-  greenfield tail (`--color-tail-gf-photo` over the Guggenheim) fell to 2.68:1. On a short phone
-  the card starts where the shade gives way, so it carries its own pane
-  (`--color-hero-card-phone`). The tail takes the photo-lifted tints, as on a desktop. The
-  «nosotros» cube stands under the shade like a photograph, centred a little under the copy's end
-  and leaving by the right edge. Above the shade, its lit edges ran behind the kicker at 1.1:1.
+  scroll". Three layouts were rendered into the live page:
+  - the photograph first, then the copy. The kicker ended at 693 in the 659 fold, which was #572's
+    problem back;
+  - the card over a strip under the copy. The card fell under the fold;
+  - the photograph filling the band with the copy on it, the desktop's composition.
+
+  He chose the third. The band is at least a screen tall and the photographs cover it. #572's
+  order stays, h1 → kicker → card → rail, so G23 holds unchanged.
+
+  The shade is drawn in `homepage.css` from three tokens:
+  - heavy (`--hero-shade-copy`, 0.76) down to the kicker's last line, which the script measures
+    into `--copy-end`;
+  - light (`--hero-shade-clear`) where the photograph shows;
+  - darker at the foot (`--hero-shade-foot`).
+
+  On a short phone the card starts where the shade gives way, so it carries its own pane
+  (`--color-hero-card-phone`).
+
+  The tail is held to the 4.5:1 its desktop tints were lifted to, not to the 3:1 WCAG allows its
+  size. It never gets a darker shade to reach that. The rule is to lift a tint as far as its
+  photograph needs. Phones take the photo-lifted tints through `--tq*`. Five of them held 4.8:1
+  or more. The greenfield one, over the Guggenheim, measured 3.7:1. Phones take a lift of it
+  instead (`--color-tail-gf-phone`, OKLCH lightness +0.08 at its own hue, chroma kept), and the
+  desktop's tint does not change. The shade's 0.76 was chosen first, by the kicker and the
+  greenfield frame: at 0.66 that tail fell to 2.68:1 before its lift.
+
+  The «nosotros» cube may not reach a letter (`.design-sync/verify/overlap-h.cjs`). Centred under
+  the copy's end, it ran 25 px into the kicker at 393 × 852. So it stands only in the room between
+  the copy and the card, which the script measures into `--cube-room`. It is sized to that room
+  and drawn only where the room is at least 120 px. A Pixel 7 draws a cube 132 px tall. A 393,
+  430 or 320 px iPhone has no such room and draws none; before #720 its cube was a screen down
+  anyway.
+
   Measured on iPhone SE, iPhone 15 Pro, iPhone 15 Pro Max and Pixel 7, all seven frames, against
-  the 99th-percentile pixel under each line: the kicker ≥ 7.7:1, the h1 and tail ≥ 3.7:1 and the
-  card ≥ 10:1. Phones ask for the photographs at 170vw (`HOME_PHOTO_SIZES`). The cover crop draws a
-  frame 1,060–1,570 css px wide, so a 3x phone takes the 2016 file: about twice the bytes of the
-  1320 one and still under the 3024 a 3x screen would need to be sharp. They load after the page.
-  Tablets and desktops are unchanged: same geometry at 768, 1024 and 1440 against production.
+  the 99th-percentile pixel under each line:
+
+  | Text | Lowest contrast |
+  | :--- | :--- |
+  | Kicker | 7.69:1 |
+  | h1 and tail | 4.79:1 |
+  | Card | 10.5:1 |
+
+  `overlap-h.cjs` read «cube ok» in Chromium and WebKit.
+
+  Phones ask for the photographs at 170vw (`HOME_PHOTO_SIZES`). The cover crop draws a frame
+  1,060–1,570 css px wide, so which file a phone takes depends on its width and density:
+
+  | Phone | File |
+  | :--- | :--- |
+  | 393 px at 3x, 412 px at 2.625x | 2016 (about twice the bytes of the 1320) |
+  | 430 px at 3x | 3024 |
+  | 320 px at 2x | 1320 |
+
+  They load after the page, never with it.
+
+  Tablets and desktops are unchanged: the same geometry at 768, 1024 and 1440 against production.
 - **The pause on a phone, at the band's top corner (#681)**: #572 left it in the band's corner,
   which had become the strip's, 180–440 px under the fold of every phone measured. A visitor
   reported having to scroll to stop the band. Lower in the first screen no corner is free. The

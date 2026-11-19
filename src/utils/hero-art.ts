@@ -214,9 +214,8 @@ export const HOME_PHOTO: Record<FaceKey, HomePhoto> = {
 	bd: { stem: "/assets/hero/bd-observatorio-entero", width: 1320, height: 880, focus: "50% 60%" },
 };
 /** Phones (#720): the photograph covers the whole band, a portrait box, so a 3:2 to 2:1 frame is drawn 2.5–3.5 times
- * the screen's width. 170vw gives a 393 px phone at 3x and a 412 px one at 2.625x the 2016 file (about twice the bytes
- * of the 1320 the bare 100vw asked for); 3024, which a 3x phone would need to be sharp, would double them again for a
- * picture that stands under the copy's shade. They load after the page, never with it. */
+ * the screen's width. 170vw asks for the file that crop needs, short of the sharpest: which file each phone takes is
+ * recorded in docs/architecture.md («Phones, the photograph behind the copy»). They load after the page. */
 export const HOME_PHOTO_SIZES = "(max-width: 767px) 170vw, 100vw";
 
 /**
@@ -224,11 +223,12 @@ export const HOME_PHOTO_SIZES = "(max-width: 767px) 170vw, 100vw";
  * flat band (phones, tablets) and the lift it needs over that vertical's photograph (desktops). The
  * values are theme.css tokens; this is only which one each face takes.
  */
-export const HERO_TAIL: Record<FaceKey, { band: string; photo: string }> = {
+export const HERO_TAIL: Record<FaceKey, { band: string; photo: string; phone?: string }> = {
 	cdn: { band: "var(--color-tail-cdn)", photo: "var(--color-tail-cdn-photo)" },
 	int: { band: "var(--color-tail-int)", photo: "var(--color-tail-int-photo)" },
 	ia: { band: "var(--color-tail-ia)", photo: "var(--color-tail-ia-photo)" },
-	gf: { band: "var(--color-tail-gf)", photo: "var(--color-tail-gf-photo)" },
+	// a phone's shade lets less of the Guggenheim's light through than a desktop's veil keeps out (#720)
+	gf: { band: "var(--color-tail-gf)", photo: "var(--color-tail-gf-photo)", phone: "var(--color-tail-gf-phone)" },
 	ec: { band: "var(--color-tail-ec)", photo: "var(--color-tail-ec-photo)" },
 	bd: { band: "var(--color-tail-bd)", photo: "var(--color-tail-bd-photo)" },
 };
