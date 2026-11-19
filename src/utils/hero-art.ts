@@ -213,7 +213,11 @@ export const HOME_PHOTO: Record<FaceKey, HomePhoto> = {
 	ec: { stem: "/assets/hero/home-almacen", width: 1320, height: 707, focus: "62% 55%" },
 	bd: { stem: "/assets/hero/bd-observatorio-entero", width: 1320, height: 880, focus: "50% 60%" },
 };
-export const HOME_PHOTO_SIZES = "100vw";
+/** Phones (#720): the photograph covers the whole band, a portrait box, so a 3:2 to 2:1 frame is drawn 2.5–3.5 times
+ * the screen's width. 170vw gives a 393 px phone at 3x and a 412 px one at 2.625x the 2016 file (about twice the bytes
+ * of the 1320 the bare 100vw asked for); 3024, which a 3x phone would need to be sharp, would double them again for a
+ * picture that stands under the copy's shade. They load after the page, never with it. */
+export const HOME_PHOTO_SIZES = "(max-width: 767px) 170vw, 100vw";
 
 /**
  * The home title's tail, per vertical (#580, brief §3.2): the on-band tint where the h1 stands on the

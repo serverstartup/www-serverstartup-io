@@ -396,6 +396,9 @@ const CUBE = {
 	const card = hero?.querySelector<HTMLElement>(".s-hero__card");
 	const measure = () => {
 		if (!hero || !card) return;
+		// where the copy ends, for the phone's shade (#720): heavy down to the kicker's last line, light under it
+		const kicker = hero.querySelector<HTMLElement>(".s-hero__kicker");
+		if (kicker) hero.style.setProperty("--copy-end", `${Math.round(kicker.getBoundingClientRect().bottom - hero.getBoundingClientRect().top)}px`);
 		const index = card.querySelector<HTMLElement>(".s-hero__verticals");
 		const items = Array.from(card.querySelectorAll<HTMLElement>(".s-hero__item"));
 		if (!index || !items.length) return;

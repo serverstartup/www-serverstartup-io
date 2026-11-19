@@ -768,7 +768,7 @@ rotating edge (Base.astro), so the two cannot drift.
   for) ended at y = 718 on a 659 px iPhone 15 Pro. Shrinking the strip was measured and rejected
   (20 px to spare at 30 % of the screen, still under the fold at 320 px, the cube at its minimum
   and the card over most of the picture). So the band reads h1 → kicker → card → rail, then the
-  strip, whole and uncovered, fading in from the band at its top (`--hero-scrim-strip-top`). The
+  strip, whole and uncovered, fading in from the band at its top (`--hero-scrim-strip-top`, gone in #720). The
   card holds its taller state on phones: in the flow, a deck changing height each frame would move
   the picture under it on every frame. Measured after: the sentence ends at y = 406 on 393 × 659
   and 435 on 320 × 568; the card and the rail open above the fold on every phone but the 320 px
@@ -777,6 +777,29 @@ rotating edge (Base.astro), so the two cannot drift.
   gate's G23 holds the sentence above a 393 × 659 fold; the engines gate holds the card's height on
   a phone, each with a planted defect. The header «contacto» link offered in the same round was
   declined (it cut the inner pages' breadcrumb from 173 to 88 px at 393 px).
+- **Phones, the photograph behind the copy (#720, founder 2026-11-19)**: #572's order left no
+  photograph in a phone's first screen. Measured 2026-11-19 on production: the strip's first pixel
+  was at y = 684 on 393 × 659 and 833 on 320 × 568, and only 156 px of it showed on a Pixel 7,
+  while every vertical shows its photograph from y ≈ 370. The founder: "en la home tengo que hacer
+  scroll". Three layouts were rendered into the live page: the photograph first (the kicker ended at
+  693 in the 659 fold, #572's problem back), the card over a strip under the copy (the card fell
+  under the fold), and the photograph filling the band with the copy on it, the desktop's
+  composition. He chose the third. The band is at least a screen tall and the photographs cover
+  it. #572's order stays, h1 → kicker → card → rail, so G23 holds unchanged. The shade is drawn in
+  `homepage.css` from three tokens: heavy (`--hero-shade-copy`, 0.76) down to the kicker's last line,
+  which the script measures into `--copy-end`; light (`--hero-shade-clear`) where the photograph
+  shows; darker at the foot (`--hero-shade-foot`). 0.76 is the lightest that held: at 0.66 the
+  greenfield tail (`--color-tail-gf-photo` over the Guggenheim) fell to 2.68:1. On a short phone
+  the card starts where the shade gives way, so it carries its own pane
+  (`--color-hero-card-phone`). The tail takes the photo-lifted tints, as on a desktop. The
+  «nosotros» cube stands under the shade like a photograph, centred a little under the copy's end
+  and leaving by the right edge. Above the shade, its lit edges ran behind the kicker at 1.1:1.
+  Measured on iPhone SE, iPhone 15 Pro, iPhone 15 Pro Max and Pixel 7, all seven frames, against
+  the 99th-percentile pixel under each line: the kicker ≥ 7.7:1, the h1 and tail ≥ 3.7:1 and the
+  card ≥ 10:1. Phones ask for the photographs at 170vw (`HOME_PHOTO_SIZES`). The cover crop draws a
+  frame 1,060–1,570 css px wide, so a 3x phone takes the 2016 file: about twice the bytes of the
+  1320 one and still under the 3024 a 3x screen would need to be sharp. They load after the page.
+  Tablets and desktops are unchanged: same geometry at 768, 1024 and 1440 against production.
 - **The pause on a phone, at the band's top corner (#681)**: #572 left it in the band's corner,
   which had become the strip's, 180–440 px under the fold of every phone measured. A visitor
   reported having to scroll to stop the band. Lower in the first screen no corner is free. The
