@@ -858,6 +858,18 @@ column on a desktop, above the card's tallest state on a tablet, 86 % of the str
   per-frame tints failed on the real face and were re-lifted by the same method.
 - **The rail is the navigation** (no arrows, brief §9.8): seven stops, buttons with the keyboard
   (arrows walk them, Home/End), each seeking the clock as the arrows used to.
+- **Under reduced motion the band still answers (#718)**: nothing runs there, so a seek moved nothing,
+  and the stops are the only way to the six photographs. A stop pins its frame through the manual
+  mode instead (`.is-manual` + `data-slide`, the state the a11y gate freezes) and parks the frame's
+  colour in `--hero-now` for the header's edge. The card list (`.s-hero__index`) shares the deck's
+  cell with the «nosotros» index and comes after it, so its own box sat over the index. With motion,
+  the running animation lifted the index above it; without, four of six rows (all six on a phone)
+  took neither hover nor click. The list never takes the pointer, and a card does while it shows.
+  Measured 2026-11-18 on production with the installed Chrome reading macOS's *Reduce motion*, and in
+  WebKit and Chromium on desktop and phone profiles. The engines gate (A) clicks it under reduced
+  motion. The Puppeteer gates pass `--force-prefers-no-reduced-motion` (`scripts/lib/host-neutral.mjs`):
+  a headless Chrome on macOS reads the system setting, and on a Mac with it on they measured the still
+  page while CI measured the moving one.
 - **Eight seconds a frame, not six (#682)**: a visitor could not finish a caption. At 6 s the
   caption is whole for 4.8 s (2.8571–14.2857 % of the cycle), and a caption is a name plus a
   `hero_line` of 18–25 words. At 238 words per minute, the mean adult silent-reading rate

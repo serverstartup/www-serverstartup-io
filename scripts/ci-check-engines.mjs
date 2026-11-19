@@ -24,6 +24,8 @@
  *      SCENE_BEATS.end of starting, plus a margin.
  *   R  reduced motion: every vertical starts `is-done`, nothing runs in the home's band, and no
  *      pause or replay is shown — there is nothing for it to stop.
+ *   A  reduced motion on the home, used (#718): every row of the «nosotros» index is what a pointer reaches at its
+ *      centre, and a real click on a stop pins that frame — its seal, its card, its photograph.
  *   P  the home's pause, at load: inside the first screen, below the header, and on no text (#681 —
  *      after #572 it sat at the band's foot, 180–440 px under a phone's fold); on a phone also at 360
  *      and 320 px, the narrowest widths, where the h1's first line comes closest to it.
@@ -31,7 +33,8 @@
  * Before any of it, each profile must catch its planted defects: a stylesheet that freezes the
  * tail's colour, a vertical whose scene script never arrives, a label on the h1, a card that
  * does the opposite of what that width expects (animated on a phone, frozen from 768 px up), a
- * pause pushed a screen down, a pause lifted under the header, and a word under the pause. A profile that misses any is blind and
+ * pause pushed a screen down, a pause lifted under the header, a word under the pause, and — under reduced motion —
+ * the card list back over the index and stops whose script never arrives (#718). A profile that misses any is blind and
  * the run exits 3 — as it does when an engine fails to launch.
  *
  * Exit: 0 green · 1 a defect · 3 blind (an engine missing, a plant not seen, the stack gone).
@@ -275,6 +278,47 @@ async function reduced(page, route, tail0) {
 	}, [route, tail0]);
 }
 
+/** A — reduced motion on the home, used rather than looked at (#718): with no clock running, every row of the
+    «nosotros» index must be the topmost thing under its own centre (what a hover and a click reach), and a
+    real click on a stop must pin that stop's frame — its seal lit, its card shown, the photograph in. Before
+    #718 four rows of six (six on a phone) sat under the hidden card list and every stop did nothing, while R
+    stayed green: nothing running and no pause shown is also what a dead band looks like. */
+async function answers(page, route) {
+	await page.goto(`${BASE}${route}?engines=${Date.now()}`, { waitUntil: "load", timeout: 60_000 });
+	await page.waitForTimeout(500);
+	const problems = [];
+	const covered = await page.evaluate(() => [...document.querySelectorAll(".s-hero__vlink")].flatMap((a) => {
+		a.scrollIntoView({ block: "center", behavior: "instant" });
+		const r = a.getClientRects()[0];
+		if (!r) return [`«${a.textContent.trim()}» is not rendered`];
+		const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+		return top && (top === a || a.contains(top)) ? [] : [`«${a.textContent.replace(/\s+/g, " ").trim()}» is under ${top ? top.tagName.toLowerCase() + "." + String(top.className).split(" ")[0] : "nothing"}`];
+	}));
+	if (!covered.length && (await page.locator(".s-hero__vlink").count()) !== 6) covered.push(`${await page.locator(".s-hero__vlink").count()} index rows, not 6`);
+	for (const c of covered) problems.push(`${route}: reduced motion, an index row a pointer cannot reach — ${c}`);
+	for (const k of [3, 6, 0]) {
+		const at = await page.evaluate((i) => {
+			const s = document.querySelectorAll(".s-hero__stop")[i];
+			s.scrollIntoView({ block: "center", behavior: "instant" });
+			const r = s.getBoundingClientRect();
+			return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+		}, k);
+		await page.mouse.click(at.x, at.y);
+		await page.waitForTimeout(300);
+		const shown = await page.evaluate(() => {
+			const lit = (els) => { const o = [...els].map((e) => Number(getComputedStyle(e).opacity)); return o.indexOf(Math.max(...o)); };
+			const seen = (e) => getComputedStyle(e).visibility === "visible" && Number(getComputedStyle(e).opacity) > 0.5;
+			const items = [...document.querySelectorAll(".s-hero__item")];
+			const card = items.findIndex(seen) + 1 || (seen(document.querySelector(".s-hero__verticals")) ? 0 : -1);
+			const photos = [...document.querySelectorAll(".s-hero__photo")];
+			const photo = photos.some(seen) ? lit(photos) + 1 : 0;
+			return { seal: lit(document.querySelectorAll(".s-hero__seal")), card, photo };
+		});
+		if (shown.seal !== k || shown.card !== k || shown.photo !== k) problems.push(`${route}: reduced motion, stop ${k} clicked — seal ${shown.seal}, card ${shown.card}, photograph ${shown.photo}; expected ${k} for all three`);
+	}
+	return problems;
+}
+
 async function profileRun(p) {
 	try {
 		await (await p.engine.launch()).close();
@@ -285,7 +329,7 @@ async function profileRun(p) {
 	{
 		/* the plants: every one must be called, or this profile is not measuring anything */
 		const phone = devices[p.device].viewport.width < 768;
-		const [frozen, stalled, covered, flipped, sunk, lifted, worded] = await Promise.all([
+		const [frozen, stalled, covered, flipped, sunk, lifted, worded, buried, dead] = await Promise.all([
 			withPage(p, {}, async (page) => {
 				await page.addInitScript(plantStyle(".ss-title__tail { animation: none !important; }"));
 				return (await home(page, "/")).problems;
@@ -306,14 +350,25 @@ async function profileRun(p) {
 			withPage(p, {}, (page) => pauseInView(page, "/", "fold")),
 			withPage(p, {}, (page) => pauseInView(page, "/", "header")),
 			withPage(p, {}, (page) => pauseInView(page, "/", "word")),
+			/* #718, both halves: the card list back over the index, and stops whose script never arrives */
+			withPage(p, { reducedMotion: "reduce" }, async (page) => {
+				await page.addInitScript(plantStyle(".s-hero__index { pointer-events: auto !important; }"));
+				return answers(page, "/");
+			}),
+			withPage(p, { reducedMotion: "reduce" }, async (page) => {
+				await page.route(/\/_astro\/HomepageContent\.astro_astro_type_script/, (r) => r.abort());
+				return answers(page, "/");
+			}),
 		]);
 		const onCopy = covered.some((m) => m.includes("PLANT"));
 		const deck = flipped.some((m) => m.includes(phone ? "holds its taller state" : "should change height"));
 		const fold = sunk.some((m) => m.includes("outside the first screen"));
 		const under = lifted.some((m) => m.includes("outside the first screen"));
 		const word = worded.some((m) => m.includes("«PLANT»"));
-		const seen = frozen.some((m) => m.includes("tail")) && stalled.some((m) => m.includes("never started")) && onCopy && deck && fold && under && word;
-		if (!seen) return { p, blind: `${p.name}: a planted defect went unseen (frozen tail: ${frozen.length ? "seen" : "MISSED"}, scene script withheld: ${stalled.length ? "seen" : "MISSED"}, a label on the h1: ${onCopy ? "seen" : "MISSED"}, the card ${phone ? "animated on a phone" : "frozen"}: ${deck ? "seen" : "MISSED"}, the pause a screen down: ${fold ? "seen" : "MISSED"}, the pause under the header: ${under ? "seen" : "MISSED"}, a word under the pause: ${word ? "seen" : "MISSED"})` };
+		const reach = buried.some((m) => m.includes("cannot reach"));
+		const pin = dead.some((m) => m.includes("clicked"));
+		const seen = frozen.some((m) => m.includes("tail")) && stalled.some((m) => m.includes("never started")) && onCopy && deck && fold && under && word && reach && pin;
+		if (!seen) return { p, blind: `${p.name}: a planted defect went unseen (frozen tail: ${frozen.length ? "seen" : "MISSED"}, scene script withheld: ${stalled.length ? "seen" : "MISSED"}, a label on the h1: ${onCopy ? "seen" : "MISSED"}, the card ${phone ? "animated on a phone" : "frozen"}: ${deck ? "seen" : "MISSED"}, the pause a screen down: ${fold ? "seen" : "MISSED"}, the pause under the header: ${under ? "seen" : "MISSED"}, a word under the pause: ${word ? "seen" : "MISSED"}, the index covered under reduced motion: ${reach ? "seen" : "MISSED"}, stops that pin nothing: ${pin ? "seen" : "MISSED"})` };
 
 		const [homes, verticals, pauses] = await Promise.all([
 			Promise.all(HOME.map((r) => withPage(p, {}, (page) => home(page, r)))),
@@ -325,9 +380,10 @@ async function profileRun(p) {
 		]);
 		const tail0 = Object.fromEntries(HOME.map((r, i) => [r, homes[i].tail0]));
 		const still = await pool([...HOME, ...VERTICALS], LANES, (r) => withPage(p, { reducedMotion: "reduce" }, (page) => reduced(page, r, tail0[r])));
+		const used = await pool(HOME, LANES, (r) => withPage(p, { reducedMotion: "reduce" }, (page) => answers(page, r)));
 		return {
 			p,
-			problems: [...homes.flatMap((h) => h.problems), ...pauses.flat(), ...verticals.flatMap((v) => v.problems), ...still.flat()],
+			problems: [...homes.flatMap((h) => h.problems), ...pauses.flat(), ...verticals.flatMap((v) => v.problems), ...still.flat(), ...used.flat()],
 			took: verticals.map((v) => v.took).filter(Boolean),
 			seconds: Math.round((Date.now() - t0) / 1000),
 		};
@@ -343,12 +399,13 @@ for (const r of runs) {
 		console.error(`✗ BLIND ${r.blind}`);
 		continue;
 	}
-	console.log(`${r.p.name} (${r.seconds} s): plants seen (frozen tail, withheld scene script, a label on the h1, the card's height the wrong way round, the pause a screen down, the pause under the header, a word under the pause)`);
+	console.log(`${r.p.name} (${r.seconds} s): plants seen (frozen tail, withheld scene script, a label on the h1, the card's height the wrong way round, the pause a screen down, the pause under the header, a word under the pause, the index covered under reduced motion, stops that pin nothing)`);
 	const span = r.took.length ? `${Math.min(...r.took)}–${Math.max(...r.took)} ms` : "—";
 	if (!r.problems.length) {
 		console.log(`  ✓ home ${HOME.join(" ")}: the tail changes colour on frames 0/1/2, the card changes height (holds it on a phone), the rail's stops are buttons, the pause is in the first screen on no text`);
 		console.log(`  ✓ ${VERTICALS.length} verticals start and come to rest (${span} from is-playing to is-done; budget ${END + MARGIN} ms), no scene text on the copy mid-animation`);
 		console.log(`  ✓ reduced motion — intended (#315): every opening starts at its end, the home holds its first frame, no pause shown`);
+		console.log(`  ✓ reduced motion, used (#718): every index row is under the pointer, and a stop pins its frame — seal, card and photograph`);
 	}
 	for (const m of r.problems) {
 		bad++;

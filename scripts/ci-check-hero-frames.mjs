@@ -40,6 +40,7 @@
 import puppeteer from "puppeteer";
 import { seedRoutes } from "./lib/seed-routes.mjs";
 import { cdpDiagnosis, stackDiagnosis } from "./lib/stack-probe.mjs";
+import { HOST_NEUTRAL } from "./lib/host-neutral.mjs";
 
 const BASE = (process.argv[2] || "http://localhost:8787").replace(/\/$/, "");
 const LONG_TASK_MS = 50;
@@ -109,7 +110,7 @@ function frames([from, to, step]) {
    to open the tenth page ("Target.createTarget: Session with given id not found") after one particular sequence
    of routes and never after any of its parts — a fresh profile is also the state the score is measured in. */
 async function measure(load) {
-	const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox", "--disable-dev-shm-usage"], protocolTimeout: 300_000 });
+	const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox", "--disable-dev-shm-usage", ...HOST_NEUTRAL], protocolTimeout: 300_000 });
 	const page = await browser.newPage();
 	try {
 		await page.setViewport(PHONE);
