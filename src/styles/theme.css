@@ -312,11 +312,16 @@
 	--hero-scrim-strip:
 		linear-gradient(0deg, rgba(30, 30, 30, 1) 0%, rgba(30, 30, 30, 0.9) 36%, rgba(30, 30, 30, 0) 62%),
 		linear-gradient(180deg, rgba(30, 30, 30, 0.45) 0%, rgba(30, 30, 30, 0) 26%);
-	/* the home on phones (#572): the strip comes after the copy and the rail,
-	   so it runs out of the band's own ground at its top instead of its foot —
-	   the ground itself, or the join shows as a seam. No text stands on it,
-	   so it needs no shade under a card. */
-	--hero-scrim-strip-top: linear-gradient(180deg, var(--color-ground-dark) 0%, transparent 34%);
+	/* the home on phones (#720): the photograph fills the band and the copy
+	   stands on it. The shade is drawn in homepage.css, where the copy's
+	   measured end is known; these are its three weights: under the copy,
+	   where the photograph shows, and at the foot under the rail. */
+	--hero-shade-copy: rgba(30, 30, 30, 0.76);
+	--hero-shade-clear: rgba(30, 30, 30, 0.2);
+	--hero-shade-foot: rgba(30, 30, 30, 0.55);
+	/* the card's pane on a phone: the band's ground, nearly opaque, so the
+	   card reads whatever the shade is doing behind it */
+	--color-hero-card-phone: color-mix(in srgb, var(--color-ground-dark) 84%, transparent);
 	/* Seven frames, eight seconds each: «nosotros», then the six photographs
 	   (#580). Named here because the header's edge and the title's tail
 	   rotate on the same clock as the images and the three must not drift.
@@ -362,6 +367,11 @@
 	--color-tail-gf-photo: #8ABD97;
 	--color-tail-ec-photo: #98D6FF;
 	--color-tail-bd-photo: #97B8DE;
+	/* on a phone (#720) the tail stands on the photograph under a shade. Every
+	   photo tint holds 4.5:1 there but the greenfield one over the Guggenheim
+	   (3.7:1), so a phone takes this lift of it: OKLCH lightness +0.08 at its
+	   own hue, chroma kept. The desktop's tint is unchanged. */
+	--color-tail-gf-phone: #A3D7B0;
 
 	/* ── The menu panel (#417, re-inked #431) ────────────────────────────
 	   #417 put the panel on ink with the hero's own cube drawing behind it,

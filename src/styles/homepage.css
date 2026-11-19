@@ -628,80 +628,120 @@
 
 .s-hero.is-manual[data-slide="6"] .ss-title__tail { color: var(--tm6, var(--color-brand-grey)); }
 
-/* ── phones: the copy first (#572, founder 2026-10-24) ──
-   With the photograph's strip on top, a phone's first screen was the cube
-   and the index: the h1 started at y = 413 of 659 on an iPhone 15 Pro and
-   the kicker's first sentence — who we work for — ended at 718, under the
-   fold. Shrinking the strip was measured and rejected: at 30 % of the
-   screen the sentence cleared the fold by 20 px and still missed it on a
-   320 px phone, with the cube at its minimum and the card over most of the
-   picture. So below 768 px the band reads h1 → kicker → card → rail, and the
-   strip follows, whole and uncovered; the cube and the photographs are the
-   first thing the reader scrolls to. This reverses #560's phone order (the
-   card above the h1, so the picture never rotated without its name): the
-   card now names the vertical with its picture right under it, not behind
-   it. Tablets and desktops keep #560. The pause control stayed in the
-   band's corner, which became the strip's — a screen down, until #681
-   moved it to the band's top corner (below). */
+/* ── phones: the copy first, on the photograph (#572, #720) ──
+   #572 (founder 2026-10-24) put the copy first: with the photograph's strip
+   on top, the h1 started at y = 413 of 659 on an iPhone 15 Pro and the
+   kicker's first sentence — who we work for — ended under the fold. The strip
+   went after the copy, and then no photograph reached the first screen at all
+   (#720: the first pixel at 684 of 659 on that iPhone, 833 of 568 on a
+   320 px one), while every vertical shows its own from y ≈ 370. So below
+   768 px the photograph fills the band, as on a desktop, and the copy stands
+   on it in #572's order: h1 → kicker → card → rail. Tablets keep #560.
+
+   Two alternatives were rendered into the live page and measured beside this
+   one (#720): the photograph first, then the copy (the kicker ended at 693 in
+   a 659 fold, the layout #572 replaced), and the card over a strip under the
+   copy (the card fell under the fold). */
 @media (max-width: 767px) {
-	/* The band ends where the strip ends. With the screen-tall minimum, a
-	   narrow tall window (an iPad mini upright, 744 × 1133) left ground under
-	   the strip, and the cube and the pause — placed from the band's foot —
-	   fell out of the picture into it. */
+	/* A screen tall at least, and as tall as the copy where the copy is
+	   taller (a 320 px phone): the photograph covers whatever the band is. */
 	.s-hero--home {
-		--hero-strip: var(--hero-strip-photo);
-		min-height: 0;
-		padding: var(--home-pad-top) 0 0;
+		min-height: 100svh;
+		padding: var(--home-pad-top) 0 var(--space-4);
 	}
 	/* The pause (#681), level with the h1's first line at the column's right
 	   edge: the corner of the band a phone sees first. At the foot it sat
-	   under the strip, 180–440 px below the fold. Lower in the first screen
-	   no corner is free: the card's carry text on most frames, and under the
-	   card a 390 px phone has 26–31 px left. */
+	   180–440 px below the fold. Lower in the first screen no corner is free:
+	   the copy runs to the card and the card to the rail. */
 	.s-hero--home .scene__ctl {
 		top: var(--home-pad-top);
 		bottom: auto;
 	}
+	/* The photographs under the whole band. No stacking context of its own, so
+	   the shade (z 1) can stand over the cube (z 0) as it does over a
+	   photograph, and the copy (z 2) over both. */
 	.s-hero--home .s-hero__stage {
-		position: relative;
-		order: 1;
-		inset: auto;
-		width: 100%;
+		position: absolute;
+		inset: 0;
+		height: auto;
+		z-index: auto;
 	}
+	/* Heavy under the copy, down to its last line (`--copy-end`, measured by
+	   the script; before it arrives, the fallback covers a 393 × 659 phone's
+	   copy), then light where the photograph shows, and darker again at the
+	   foot under the rail. The card carries its own pane. Why these weights,
+	   and what they measured: docs/architecture.md, «Phones, the photograph
+	   behind the copy». */
 	.s-hero--home .s-hero__scrim {
-		background-image: var(--hero-scrim-strip-top);
-	}
-	/* the subject fills ~86 % of the strip and sits in its middle; the
-	   drawing's box overhangs the cube by 0.07 of its height. Lifted over the
-	   stage: as a flex item with `order: 1` the stage now paints after the
-	   mark, and the photographs would cover the seal. */
-	.s-hero--home .s-hero__mark {
 		z-index: 1;
-		--cube-h: calc(var(--hero-strip) * 0.86);
-		top: auto;
-		bottom: calc((var(--hero-strip) - var(--cube-h)) / 2 - var(--cube-h) * 0.07);
+		background-image: linear-gradient(180deg,
+			var(--hero-shade-copy) 0,
+			var(--hero-shade-copy) var(--copy-end, 62svh),
+			var(--hero-shade-clear) calc(var(--copy-end, 62svh) + 10svh),
+			var(--hero-shade-clear) calc(100% - 120px),
+			var(--hero-shade-foot) 100%);
 	}
+	/* «nosotros»'s cube, the frame's picture where the others have a
+	   photograph, in the room between the copy and the card (`--cube-room`,
+	   measured by the script, 0 under 120 px) and never on a letter: sized to
+	   the room, leaving by the right edge as on a desktop it leaves by the
+	   left. A short phone has no such room and draws no cube; before #720 its
+	   cube was a screen down anyway. Under the shade like a photograph. */
+	.s-hero--home .s-hero__mark {
+		z-index: 0;
+		--cube-h: min(78vw, 46svh, max(0px, (var(--cube-room, 0px) - 2 * var(--space-3)) / 1.14));
+		top: calc(var(--copy-end, 62svh) + var(--space-3));
+		bottom: auto;
+		left: auto;
+		right: calc(var(--cube-h) * -0.3);
+	}
+	/* The copy at the top, the card and the rail at the foot of the first
+	   screen: the photograph shows in whatever lies between. */
+	.s-hero--home .s-hero__inner {
+		z-index: 2;
+		min-height: calc(100svh - var(--home-pad-top) - var(--space-4));
+	}
+	.s-hero--home .s-hero__kicker {
+		margin-bottom: var(--space-5);
+	}
+	/* Its own pane: on a short phone the card starts where the copy's shade
+	   gives way, and over the bridge its name fell to 3.3:1 on the light one. */
 	.s-hero--home .s-hero__card {
 		position: relative;
 		top: auto;
 		translate: none;
 		order: 1;
-		margin-top: var(--space-5);
+		margin-top: auto;
+		background-color: var(--color-hero-card-phone);
 	}
 	.s-hero--home .s-hero__ticker {
 		order: 2;
 	}
 	/* In the flow, a card that changed height on each frame would move the
-	   rail and the picture under it on every frame. It holds the taller
-	   of its two states instead — the deck's documented fallback. Listed again
-	   with the manual state, with and without a slide, so a gate pinning a
-	   frame measures the same card a reader sees. */
+	   rail under it on every frame. It holds the taller of its two states
+	   instead — the deck's documented fallback. Listed again with the manual
+	   state, with and without a slide, so a gate pinning a frame measures the
+	   same card a reader sees. */
 	.s-hero--home .s-hero__deck,
 	.s-hero--home.is-manual .s-hero__deck,
 	.s-hero--home.is-manual[data-slide] .s-hero__deck {
 		height: auto;
 		animation: none;
 	}
+	/* The tail stands on a photograph now, as on a desktop: the photo-lifted
+	   tints (`--tq*`: a face's phone lift where it has one), on the clock and
+	   pinned. */
+	.s-hero--home .ss-title__tail {
+		color: var(--tq0, var(--color-brand-grey));
+		animation-name: s-hero-tail-phone;
+	}
+	.s-hero.is-manual[data-slide="0"] .ss-title__tail { color: var(--tq0, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="1"] .ss-title__tail { color: var(--tq1, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="2"] .ss-title__tail { color: var(--tq2, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="3"] .ss-title__tail { color: var(--tq3, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="4"] .ss-title__tail { color: var(--tq4, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="5"] .ss-title__tail { color: var(--tq5, var(--color-brand-grey)); }
+	.s-hero.is-manual[data-slide="6"] .ss-title__tail { color: var(--tq6, var(--color-brand-grey)); }
 }
 
 /* Below 360 px the h1 keeps the pause's square clear, and its first line
@@ -875,6 +915,25 @@
 	85.7143% { color: var(--tp6, var(--color-brand-grey)); }
 	98.5714% { color: var(--tp6, var(--color-brand-grey)); }
 	100% { color: var(--tp0, var(--color-brand-grey)); }
+}
+
+/* the same on a phone's shade (#720) */
+@keyframes s-hero-tail-phone {
+	0% { color: var(--tq0, var(--color-brand-grey)); }
+	12.8571% { color: var(--tq0, var(--color-brand-grey)); }
+	14.2857% { color: var(--tq1, var(--color-brand-grey)); }
+	27.1429% { color: var(--tq1, var(--color-brand-grey)); }
+	28.5714% { color: var(--tq2, var(--color-brand-grey)); }
+	41.4286% { color: var(--tq2, var(--color-brand-grey)); }
+	42.8571% { color: var(--tq3, var(--color-brand-grey)); }
+	55.7143% { color: var(--tq3, var(--color-brand-grey)); }
+	57.1429% { color: var(--tq4, var(--color-brand-grey)); }
+	70% { color: var(--tq4, var(--color-brand-grey)); }
+	71.4286% { color: var(--tq5, var(--color-brand-grey)); }
+	84.2857% { color: var(--tq5, var(--color-brand-grey)); }
+	85.7143% { color: var(--tq6, var(--color-brand-grey)); }
+	98.5714% { color: var(--tq6, var(--color-brand-grey)); }
+	100% { color: var(--tq0, var(--color-brand-grey)); }
 }
 
 /* #315's rule, applied to the loudest motion on the site: someone who asked
