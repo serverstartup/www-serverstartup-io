@@ -23,6 +23,18 @@
 #        (default d1-name: www-serverstartup-io-preview)
 set -euo pipefail
 
+# sqlite3 -bail with its PRAGMAs as the first lines of stdin, never -cmd (#722; bam#7).
+# Measured 2026-11-02 and again 2026-11-27: sqlite3 3.54.0 (macOS) exits 0 on a
+# failing statement once any -cmd is given, whether the statement is read from
+# stdin or passed as an argument, and 1 without -cmd. Ubuntu 24.04's 3.45.1 exits
+# 1 either way, so CI was sound; the leak plant below turned the macOS run blind
+# (exit 3) instead of letting it pass falsely. Every call that sets a PRAGMA goes here.
+sqlite_bail() { # <db> <pragma>... < sql
+	local db=$1
+	shift
+	{ printf '%s;\n' "$@"; cat; } | sqlite3 -bail "$db"
+}
+
 D1_NAME="${1:-www-serverstartup-io-preview}"
 REHEARSAL_ONLY=0
 [ "${2:-}" = "--rehearsal-only" ] && REHEARSAL_ONLY=1
@@ -212,8 +224,8 @@ PYEOF
 	sqlite3 "$WORK/rehearsal-remote.sqlite" \
 	  "SELECT 'DROP TABLE \"' || name || '\";' FROM sqlite_master
 	     WHERE type='table' AND name LIKE 'ec\_%' ESCAPE '\';" > "$WORK/drop-remote.sql"
-	sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" "$WORK/rehearsal-remote.sqlite" < "$WORK/drop-remote.sql"
-	sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" "$WORK/rehearsal-remote.sqlite" < "$WORK/remote-schema.sql"
+	sqlite_bail "$WORK/rehearsal-remote.sqlite" "PRAGMA trusted_schema=ON" < "$WORK/drop-remote.sql"
+	sqlite_bail "$WORK/rehearsal-remote.sqlite" "PRAGMA trusted_schema=ON" < "$WORK/remote-schema.sql"
 
 	DRIFT=$(python3 "$WORK/schema-diff.py" "$D1_DB" "$WORK/rehearsal-remote.sqlite") || exit 3
 	if [ -n "$DRIFT" ]; then
@@ -382,7 +394,7 @@ sqlite3 "$D1_DB" ".backup '$WORK/rehearsal.sqlite'"
 sqlite3 "$WORK/rehearsal.sqlite" \
   "SELECT 'DROP TABLE \"' || name || '\";' FROM sqlite_master
      WHERE type='table' AND name LIKE 'ec\_%' ESCAPE '\';" > "$WORK/drop.sql"
-sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" "$WORK/rehearsal.sqlite" < "$WORK/drop.sql"
+sqlite_bail "$WORK/rehearsal.sqlite" "PRAGMA trusted_schema=ON" < "$WORK/drop.sql"
 
 # 2b. THE REPAIR IS NOT PART OF THIS FILE (#488). Everything below applies
 #     $SQL to a database that descends from the canonical, so every column the
@@ -408,8 +420,8 @@ LEAK_COL=$(sqlite3 "$D1_DB" "SELECT name FROM pragma_table_info('ec_partners') O
 sqlite3 "$D1_DB" ".backup '$WORK/plant-leak.sqlite'"
 cp "$SQL" "$WORK/plant-leak.sql"
 echo "ALTER TABLE \"ec_partners\" ADD COLUMN \"$LEAK_COL\" TEXT;" >> "$WORK/plant-leak.sql"
-if sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" -cmd "PRAGMA foreign_keys=ON;" \
-	"$WORK/plant-leak.sqlite" < "$WORK/plant-leak.sql" > "$WORK/plant-leak.log" 2>&1; then
+if sqlite_bail "$WORK/plant-leak.sqlite" "PRAGMA trusted_schema=ON" "PRAGMA foreign_keys=ON" \
+	< "$WORK/plant-leak.sql" > "$WORK/plant-leak.log" 2>&1; then
 	echo "ERROR: plant unreported — a repair appended to the shared file applied" >&2
 	echo "  cleanly to a copy of the canonical, so the check above proves nothing." >&2
 	exit 3
@@ -421,7 +433,7 @@ echo "repair containment: the file carries no ALTER, and a planted one was caugh
 
 # foreign_keys=ON: D1 enforces FKs, the sqlite3 CLI defaults them OFF — a
 # rehearsal without them waves through DELETE orders the remote will reject.
-sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" -cmd "PRAGMA foreign_keys=ON;" "$WORK/rehearsal.sqlite" < "$SQL"
+sqlite_bail "$WORK/rehearsal.sqlite" "PRAGMA trusted_schema=ON" "PRAGMA foreign_keys=ON" < "$SQL"
 
 # Second rehearsal, different blind spot: the drop-based copy recreates the
 # collection tables EMPTY, so an FK-hostile DELETE order can never violate
@@ -435,14 +447,15 @@ sqlite3 "$D1_DB" ".backup '$WORK/rehearsal-populated.sqlite'"
 # option the seed owns but does not carry, which it must still remove. That
 # last pair is the control: a refresh that wrote nothing at all would keep
 # everything and pass the first four.
-sqlite3 -bail -cmd "PRAGMA foreign_keys=ON;" "$WORK/rehearsal-populated.sqlite" "
+sqlite_bail "$WORK/rehearsal-populated.sqlite" "PRAGMA foreign_keys=ON" <<'SQLEOF'
   INSERT INTO users(id, email, role) VALUES('plant-admin', 'plant@invalid', 50);
   INSERT INTO credentials(id, user_id, public_key, device_type) VALUES('plant-cred', 'plant-admin', x'00', 'singleDevice');
   INSERT OR REPLACE INTO options(name, value) VALUES('emdash:setup_complete', 'plant-flag');
   INSERT INTO options(name, value) VALUES('system:plant', 'plant-runtime');
   INSERT INTO _emdash_bylines(id, slug, display_name) VALUES('plant-byline', 'plant-byline', 'Plant');
-  INSERT INTO options(name, value) VALUES('site:plant', '\"plant\"');"
-sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" -cmd "PRAGMA foreign_keys=ON;" "$WORK/rehearsal-populated.sqlite" < "$SQL"
+  INSERT INTO options(name, value) VALUES('site:plant', '"plant"');
+SQLEOF
+sqlite_bail "$WORK/rehearsal-populated.sqlite" "PRAGMA trusted_schema=ON" "PRAGMA foreign_keys=ON" < "$SQL"
 PLANT=$(sqlite3 "$WORK/rehearsal-populated.sqlite" "SELECT
   (SELECT count(*) FROM users WHERE id = 'plant-admin') ||
   (SELECT count(*) FROM credentials WHERE id = 'plant-cred') ||
@@ -466,9 +479,8 @@ MU_LOCAL=$(sqlite3 "$D1_DB" "SELECT count(*) FROM sqlite_master WHERE type='trig
 MU_POP=$(sqlite3 "$WORK/rehearsal-populated.sqlite" "SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'emdash\_mu\_%' ESCAPE '\';")
 [ "$MU_POP" = "$MU_LOCAL" ] || {
 	echo "ERROR: media-usage triggers after the refresh: $MU_POP, locally: $MU_LOCAL." >&2; exit 3; }
-sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" "$WORK/rehearsal-populated.sqlite" \
-	"UPDATE ec_pages SET updated_at = updated_at WHERE rowid = (SELECT min(rowid) FROM ec_pages);" \
-	> "$WORK/mu-write.log" 2>&1 || {
+echo "UPDATE ec_pages SET updated_at = updated_at WHERE rowid = (SELECT min(rowid) FROM ec_pages);" \
+	| sqlite_bail "$WORK/rehearsal-populated.sqlite" "PRAGMA trusted_schema=ON" > "$WORK/mu-write.log" 2>&1 || {
 	echo "ERROR: a content write fails after the refresh:" >&2; cat "$WORK/mu-write.log" >&2; exit 3; }
 echo "media-usage triggers: $MU_POP recreated from local, and a content write that fires them succeeds"
 PAGES_POP=$(sqlite3 "$WORK/rehearsal-populated.sqlite" "SELECT count(*) FROM ec_pages;")
@@ -495,8 +507,8 @@ if [ -n "$REMOTE_SHAPED" ]; then
 	if [ -f "$WORK/repair.sql" ]; then
 		sqlite3 -bail "$REMOTE_SHAPED" < "$WORK/repair.sql"
 	fi
-	if ! sqlite3 -bail -cmd "PRAGMA trusted_schema=ON;" -cmd "PRAGMA foreign_keys=ON;" \
-		"$REMOTE_SHAPED" < "$SQL" > "$WORK/rehearsal-remote.log" 2>&1; then
+	if ! sqlite_bail "$REMOTE_SHAPED" "PRAGMA trusted_schema=ON" "PRAGMA foreign_keys=ON" \
+		< "$SQL" > "$WORK/rehearsal-remote.log" 2>&1; then
 		echo "ERROR: the file fails against the REMOTE's own schema." >&2
 		echo "  It passed both local rehearsals, which is expected: they cannot see this." >&2
 		echo "  Generated SQL: $SQL" >&2
